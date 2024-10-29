@@ -35,16 +35,24 @@ class LoginView(generics.GenericAPIView):
             password=serializer.validated_data["password"],
         )
         if user is not None:
-            login(request, user)
             refresh = RefreshToken.for_user(user)
             if user.is_active:
                 login(request, user)
-                return Response(
+                response = Response(
                     {
                         "refresh": str(refresh),
                         "access": str(refresh.access_token),
                     }
                 )
+
+                # response.set_cookie(
+                #     key="access_token",
+                #     value=str(refresh.access_token),
+                #     httponly=True,
+                #     secure=False,
+                #     samesite="Lax",
+                # )
+                return response
             else:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -96,6 +104,7 @@ class PurchaseBookView(generics.CreateAPIView):
 
             try:
                 book = Book.objects.get(title=book_title)
+
             except Book.DoesNotExist:
                 return Response(
                     {"error": "Book does not exist."}, status=status.HTTP_404_NOT_FOUND
@@ -144,16 +153,16 @@ class ReturnBookView(generics.CreateAPIView):
                         {"error": "You do not own this book."},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+
             except Book.DoesNotExist:
                 return Response(
                     {"error": "Book does not exist."}, status=status.HTTP_404_NOT_FOUND
                 )
 
-            book = Book.objects.get(title=book_title)
             user.credit += book.price
             user.owned_books.remove(book)
             user.save()
-            book.avalible = False
+            book.avalible = True
             book.save()
 
             return redirect("book_list")
@@ -164,4 +173,31 @@ class ReturnBookView(generics.CreateAPIView):
 class UpdateCreditView(generics.UpdateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UpdateCreditSerializer
-    permission_classes = [IsAdminUser]
+
+    def put(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect("login")
+        if not request.user.is_staff:  # یا request.user.is_superuser
+            return Response({"error": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            username = serializer.validated_data["username"]
+            credit = serializer.validated_data["credit"]
+
+            try:
+                choise_user = CustomUser.objects.get(username=username)
+                choise_user.credit = credit 
+                choise_user.save()
+
+                return Response(
+                    {"success": "User credit updated successfully."},
+                    status=status.HTTP_200_OK,
+                )
+
+            except CustomUser.DoesNotExist:
+                return Response(
+                    {"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND
+                )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

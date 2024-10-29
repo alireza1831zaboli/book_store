@@ -145,4 +145,4 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-LOGIN_URL = '/login/'
+LOGIN_URL = "/login/"

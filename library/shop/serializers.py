@@ -33,16 +33,15 @@ class BookSerializer(serializers.ModelSerializer):
 class PurchaseBookSerializer(serializers.Serializer):
     book_title = serializers.CharField()
 
-    
-
 
 class ReturnBookSerializer(serializers.Serializer):
-    book_title = serializers.CharField()  # فقط book_title
-
-
+    book_title = serializers.CharField()
 
 
 class UpdateCreditSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    credit = serializers.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     class Meta:
         model = CustomUser
-        fields = ["credit"]
+        fields = ["username", "credit"]
