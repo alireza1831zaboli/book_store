@@ -4,7 +4,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from .models import CustomUser, Book
 from .serializers import (
     RegisterSerializer,
-    LoginSerializer,
     BookSerializer,
     PurchaseBookSerializer,
     ReturnBookSerializer,
@@ -13,8 +12,6 @@ from .serializers import (
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
 
 
 class RegisterView(generics.CreateAPIView):
@@ -23,42 +20,35 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
 
-class LoginView(generics.GenericAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = LoginSerializer
+# class LoginView(generics.GenericAPIView):
+#     permission_classes = (AllowAny,)
+#     serializer_class = LoginSerializer
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = authenticate(
-            username=serializer.validated_data["username"],
-            password=serializer.validated_data["password"],
-        )
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            if user.is_active:
-                login(request, user)
-                response = Response(
-                    {
-                        "refresh": str(refresh),
-                        "access": str(refresh.access_token),
-                    }
-                )
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user = authenticate(
+#             username=serializer.validated_data["username"],
+#             password=serializer.validated_data["password"],
+#         )
+#         if user is not None:
+#             refresh = RefreshToken.for_user(user)
+#             if user.is_active:
+#                 login(request, user)
+#                 response = Response(
+#                     {
+#                         "refresh": str(refresh),
+#                         "access": str(refresh.access_token),
+#                     }
+#                 )
 
-                # response.set_cookie(
-                #     key="access_token",
-                #     value=str(refresh.access_token),
-                #     httponly=True,
-                #     secure=False,
-                #     samesite="Lax",
-                # )
-                return response
-            else:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+#                 return response
+#             else:
+#                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-        return Response(
-            {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
-        )
+#         return Response(
+#             {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
+#         )
 
 
 class UserBooksView(generics.ListAPIView):
@@ -178,8 +168,11 @@ class UpdateCreditView(generics.UpdateAPIView):
         if not request.user.is_authenticated:
             return redirect("login")
         if not request.user.is_staff:  # یا request.user.is_superuser
-            return Response({"error": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
-        
+            return Response(
+                {"error": "You do not have permission to perform this action."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data["username"]
@@ -187,7 +180,7 @@ class UpdateCreditView(generics.UpdateAPIView):
 
             try:
                 choise_user = CustomUser.objects.get(username=username)
-                choise_user.credit = credit 
+                choise_user.credit = credit
                 choise_user.save()
 
                 return Response(
