@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny
 from .models import CustomUser, Book
 from .serializers import (
     RegisterSerializer,
@@ -9,46 +9,20 @@ from .serializers import (
     ReturnBookSerializer,
     UpdateCreditSerializer,
 )
-from django.contrib.auth import authenticate, login
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import render, redirect
+from django.contrib.gis.geos import Polygon, Point
+from rest_framework import status
+from .serializers import UserLocationSerializer
+
+tehran_polygon = Polygon(
+    ((51.00, 35.00), (51.00, 36.00), (52.00, 36.00), (52.00, 35.00), (51.00, 35.00))
+)
 
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
-
-
-# class LoginView(generics.GenericAPIView):
-#     permission_classes = (AllowAny,)
-#     serializer_class = LoginSerializer
-
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         user = authenticate(
-#             username=serializer.validated_data["username"],
-#             password=serializer.validated_data["password"],
-#         )
-#         if user is not None:
-#             refresh = RefreshToken.for_user(user)
-#             if user.is_active:
-#                 login(request, user)
-#                 response = Response(
-#                     {
-#                         "refresh": str(refresh),
-#                         "access": str(refresh.access_token),
-#                     }
-#                 )
-
-#                 return response
-#             else:
-#                 return Response(status=status.HTTP_404_NOT_FOUND)
-
-#         return Response(
-#             {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
-#         )
 
 
 class UserBooksView(generics.ListAPIView):
@@ -90,6 +64,7 @@ class PurchaseBookView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = request.user
+            user_location = user.location
             book_title = serializer.validated_data["book_title"]
 
             try:
@@ -104,6 +79,18 @@ class PurchaseBookView(generics.CreateAPIView):
                 return Response(
                     {"error": "Not enough credit to buy this book."},
                     status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if not user_location:
+                return Response(
+                    {"error": "Location not set for user."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if not tehran_polygon.contains(user_location):
+                return Response(
+                    {"error": "Purchases are restricted to Tehran Province."},
+                    status=status.HTTP_403_FORBIDDEN,
                 )
 
             if user.owned_books.filter(id=book.id).exists():
@@ -194,3 +181,26 @@ class UpdateCreditView(generics.UpdateAPIView):
                 )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateLocationView(generics.UpdateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserLocationSerializer
+
+    def put(self, request, *args, **kwargs):
+        user = request.user
+        lat = request.data.get("latitude")
+        lon = request.data.get("longitude")
+
+        if not lat or not lon:
+            return Response(
+                {"error": "Latitude and longitude are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.location = Point(float(lon), float(lat))
+        user.save()
+
+        return Response(
+            {"success": "Location updated successfully."}, status=status.HTTP_200_OK
+        )

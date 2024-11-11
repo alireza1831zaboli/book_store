@@ -19,9 +19,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-# class LoginSerializer(serializers.Serializer):
-#     username = serializers.CharField()
-#     password = serializers.CharField(write_only=True)
+class UserLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["location"]
 
 
 class BookSerializer(serializers.ModelSerializer):

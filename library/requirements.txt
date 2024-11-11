@@ -6,4 +6,7 @@ PyJWT==2.9.0
 sqlparse==0.5.1
 tzdata==2024.2
 gunicorn==22.0.0
-psycopg2-binary
+psycopg2-binary==2.9.7
+djangorestframework-gis==1.1
+Pillow==9.4.0
+requests==2.31.0
