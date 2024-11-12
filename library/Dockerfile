@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM registry.sedrehgroup.ir/python:3.8
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1

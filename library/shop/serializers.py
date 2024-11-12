@@ -1,20 +1,30 @@
 from rest_framework import serializers
 from .models import CustomUser, Book
-from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.gis.geos import Point
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    latitude = serializers.FloatField(required=False)
+    longitude = serializers.FloatField(required=False)
+
     class Meta:
         model = CustomUser
-        fields = ("username", "password", "credit")
+        fields = ("username", "password", "credit", "latitude", "longitude")
         extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
+        latitude = validated_data.pop("latitude", None)
+        longitude = validated_data.pop("longitude", None)
+
         user = CustomUser(
-            username=validated_data["username"], credit=validated_data.get("credit", 0)
+            username=validated_data["username"],
+            credit=validated_data.get("credit", 0)
         )
         user.set_password(validated_data["password"])
+
+        if latitude is not None and longitude is not None:
+            user.location = Point(longitude, latitude)
+
         user.save()
         return user
 
