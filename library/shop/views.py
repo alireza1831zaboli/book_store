@@ -14,9 +14,17 @@ from django.contrib.gis.geos import Polygon, Point
 from rest_framework import status
 from .serializers import UserLocationSerializer
 
-tehran_polygon = Polygon(
-    ((51.00, 35.00), (51.00, 36.00), (52.00, 36.00), (52.00, 35.00), (51.00, 35.00))
-)
+tehran_polygon = Polygon((
+    (51.28, 35.40),  # شمال غرب
+    (51.28, 35.50),  # شمال شرق
+    (51.60, 35.50),  # شرق
+    (51.60, 35.40),  # جنوب شرق
+    (51.60, 35.30),  # جنوب شرقی
+    (51.55, 35.30),  # جنوب
+    (51.55, 35.25),  # جنوب غربی
+    (51.28, 35.25),  # غرب
+    (51.28, 35.40),  # شمال غرب
+))
 
 
 class RegisterView(generics.CreateAPIView):
@@ -188,6 +196,9 @@ class UpdateLocationView(generics.UpdateAPIView):
     serializer_class = UserLocationSerializer
 
     def put(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect("login")
+        
         user = request.user
         lat = request.data.get("latitude")
         lon = request.data.get("longitude")

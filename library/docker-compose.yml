@@ -11,7 +11,7 @@ services:
       - DEBUG=0
       - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,app,web
       - DATABASE_NAME=library_db
-      - DATABASE_USER=postgres
+      - DATABASE_USER=alireza
       - DATABASE_PASSWORD=3456
       - DATABASE_HOST=db
       - DATABASE_PORT=5432
@@ -19,7 +19,7 @@ services:
       - db
 
   nginx:
-    image: nginx:latest
+    image: registry.sedrehgroup.ir/nginx:latest
     ports:
       - "80:80"
       - "443:443"
@@ -31,11 +31,12 @@ services:
       - web
 
   db:
-    image: postgis/postgis:13-3.1
+    image: registry.sedrehgroup.ir/postgis:15-3.5
     environment:
-      POSTGRES_DB: bookstore
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: library_db
+      POSTGRES_USER: alireza
+      POSTGRES_PASSWORD: 3456
+  
     ports:
       - "5432:5432"
     volumes:
