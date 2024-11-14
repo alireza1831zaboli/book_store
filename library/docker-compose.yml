@@ -42,7 +42,18 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+  geoserver:
+    image: registry.sedrehgroup.ir/geoserver:2.24.2
+    ports:
+      - "8080:8080"
+    volumes:
+      - /home/alireza/Desktop/library-project/library/dir_data:/opt/geoserver/dir_data
+    environment:
+      - GEOSERVER_ADMIN_USER=admin
+      - GEOSERVER_ADMIN_PASSWORD=geoserver
+
 volumes:
   static_volume:
   media_volume:
   db_data:
+  geoserver_data:

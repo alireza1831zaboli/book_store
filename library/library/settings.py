@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "shop.apps.ShopConfig",
+    "geoserver.apps.GeoserverConfig"
 ]
 
 MIDDLEWARE = [
@@ -57,7 +58,7 @@ ROOT_URLCONF = "library.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR /'geoserver/templates/'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -156,3 +157,7 @@ SIMPLE_JWT = {
 }
 
 LOGIN_URL = "/login/"
+
+GEOSERVER_URL = 'http://localhost:8080/geoserver'
+GEOSERVER_USERNAME = 'admin'
+GEOSERVER_PASSWORD = 'geoserver'
