@@ -161,3 +161,8 @@ LOGIN_URL = "/login/"
 GEOSERVER_URL = 'http://localhost:8080/geoserver'
 GEOSERVER_USERNAME = 'admin'
 GEOSERVER_PASSWORD = 'geoserver'
+
+CELERY_BROKEN_URL = 'amqp://guest:guest@rabbitmq:5672//'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+

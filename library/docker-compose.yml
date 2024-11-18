@@ -19,7 +19,7 @@ services:
       - db
 
   nginx:
-    image: registry.sedrehgroup.ir/nginx:latest
+    image: registry.mahbodai.ir/nginx:latest
     ports:
       - "80:80"
       - "443:443"
@@ -31,7 +31,7 @@ services:
       - web
 
   db:
-    image: registry.sedrehgroup.ir/postgis:15-3.5
+    image: registry.mahbodai.ir/postgis:15-3.5
     environment:
       POSTGRES_DB: library_db
       POSTGRES_USER: alireza
@@ -43,7 +43,7 @@ services:
       - db_data:/var/lib/postgresql/data
 
   geoserver:
-    image: registry.sedrehgroup.ir/geoserver:2.24.2
+    image: registry.mahbodai.ir/geoserver:2.24.2
     ports:
       - "8080:8080"
     volumes:
@@ -51,6 +51,23 @@ services:
     environment:
       - GEOSERVER_ADMIN_USER=admin
       - GEOSERVER_ADMIN_PASSWORD=geoserver
+
+  rabbitmq:
+    image: registry.mahbodai.ir/rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+  
+  celery_worker:
+    build: 
+      context: .
+    command: celery -A library worker --loglevel=info
+    depends_on:
+      - rabbitmq
+
 
 volumes:
   static_volume:
