@@ -1,30 +1,33 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .models import CustomUser, Book
+from .models import CustomUser, Book, Purchase
 from .serializers import (
     RegisterSerializer,
     BookSerializer,
     PurchaseBookSerializer,
     ReturnBookSerializer,
     UpdateCreditSerializer,
+    UserLocationSerializer,
 )
 from django.shortcuts import render, redirect
 from django.contrib.gis.geos import Polygon, Point
 from rest_framework import status
-from .serializers import UserLocationSerializer
 
-tehran_polygon = Polygon((
-    (51.28, 35.40),  # شمال غرب
-    (51.28, 35.50),  # شمال شرق
-    (51.60, 35.50),  # شرق
-    (51.60, 35.40),  # جنوب شرق
-    (51.60, 35.30),  # جنوب شرقی
-    (51.55, 35.30),  # جنوب
-    (51.55, 35.25),  # جنوب غربی
-    (51.28, 35.25),  # غرب
-    (51.28, 35.40),  # شمال غرب
-))
+
+tehran_polygon = Polygon(
+    (
+        (51.28, 35.40),  # شمال غرب
+        (51.28, 35.50),  # شمال شرق
+        (51.60, 35.50),  # شرق
+        (51.60, 35.40),  # جنوب شرق
+        (51.60, 35.30),  # جنوب شرقی
+        (51.55, 35.30),  # جنوب
+        (51.55, 35.25),  # جنوب غربی
+        (51.28, 35.25),  # غرب
+        (51.28, 35.40),  # شمال غرب
+    )
+)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -138,6 +141,11 @@ class ReturnBookView(generics.CreateAPIView):
                         {"error": "You do not own this book."},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+                if not Purchase.can_be_returned():
+                    return Response(
+                        {"error": "The return period has expired."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
             except Book.DoesNotExist:
                 return Response(
@@ -198,7 +206,7 @@ class UpdateLocationView(generics.UpdateAPIView):
     def put(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect("login")
-        
+
         user = request.user
         lat = request.data.get("latitude")
         lon = request.data.get("longitude")
