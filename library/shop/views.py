@@ -170,7 +170,7 @@ class UpdateCreditView(generics.UpdateAPIView):
     def put(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect("login")
-        if not request.user.is_staff:  # یا request.user.is_superuser
+        if not request.user.is_staff:
             return Response(
                 {"error": "You do not have permission to perform this action."},
                 status=status.HTTP_403_FORBIDDEN,

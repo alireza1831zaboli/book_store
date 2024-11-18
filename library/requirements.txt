@@ -10,3 +10,4 @@ psycopg2-binary==2.9.7
 djangorestframework-gis==1.1
 Pillow==9.4.0
 requests==2.31.0
+celery==5.4.0
