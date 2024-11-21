@@ -13,6 +13,7 @@ from .serializers import (
 from django.shortcuts import render, redirect
 from django.contrib.gis.geos import Polygon, Point
 from rest_framework import status
+from notifications.task import create_notification
 
 
 tehran_polygon = Polygon(
@@ -115,6 +116,14 @@ class PurchaseBookView(generics.CreateAPIView):
             book.avalible = False
             book.save()
             user.save()
+            purchase = Purchase(
+                user=user,
+                book=book,
+            )
+            purchase.save()
+            create_notification.delay(
+                user.id, f"You have successfully purchased {book.title}."
+            )
 
             return redirect("book_list")
 
@@ -141,7 +150,17 @@ class ReturnBookView(generics.CreateAPIView):
                         {"error": "You do not own this book."},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-                if not Purchase.can_be_returned():
+
+                purchase = Purchase.objects.filter(
+                    user=user, book=book, is_returned=False
+                ).first()
+                if not purchase:
+                    return Response(
+                        {"error": "No valid purchase record found."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                if not purchase.can_be_returned():
                     return Response(
                         {"error": "The return period has expired."},
                         status=status.HTTP_400_BAD_REQUEST,
@@ -152,12 +171,16 @@ class ReturnBookView(generics.CreateAPIView):
                     {"error": "Book does not exist."}, status=status.HTTP_404_NOT_FOUND
                 )
 
+            purchase.is_returned = True
+            purchase.save()
             user.credit += book.price
             user.owned_books.remove(book)
             user.save()
             book.avalible = True
             book.save()
-
+            create_notification.delay(
+                user.id, f"You have successfully returned {book.title}."
+            )
             return redirect("book_list")
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -185,6 +208,9 @@ class UpdateCreditView(generics.UpdateAPIView):
                 choise_user = CustomUser.objects.get(username=username)
                 choise_user.credit = credit
                 choise_user.save()
+                create_notification.delay(
+                    choise_user.id, "wallet has been successfully updated."
+                )
 
                 return Response(
                     {"success": "User credit updated successfully."},
@@ -219,6 +245,7 @@ class UpdateLocationView(generics.UpdateAPIView):
 
         user.location = Point(float(lon), float(lat))
         user.save()
+        create_notification.delay(user.id, "location has been successfully updated.")
 
         return Response(
             {"success": "Location updated successfully."}, status=status.HTTP_200_OK

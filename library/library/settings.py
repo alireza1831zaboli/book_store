@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "shop.apps.ShopConfig",
-    "geoserver.apps.GeoserverConfig"
+    "notifications.apps.NotificationsConfig",
+    "geoserver.apps.GeoserverConfig",
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -58,7 +60,7 @@ ROOT_URLCONF = "library.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR /'geoserver/templates/'],
+        "DIRS": [BASE_DIR / "geoserver/templates/"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -80,8 +82,8 @@ WSGI_APPLICATION = "library.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": 'django.contrib.gis.db.backends.postgis',
-        "NAME": "postgres",
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "NAME": "library_db",
         "USER": "alireza",
         "PASSWORD": "3456",
         "HOST": "db",
@@ -158,11 +160,12 @@ SIMPLE_JWT = {
 
 LOGIN_URL = "/login/"
 
-GEOSERVER_URL = 'http://localhost:8080/geoserver'
-GEOSERVER_USERNAME = 'admin'
-GEOSERVER_PASSWORD = 'geoserver'
+GEOSERVER_URL = "http://localhost:8080/geoserver"
+GEOSERVER_USERNAME = "admin"
+GEOSERVER_PASSWORD = "geoserver"
 
-CELERY_BROKEN_URL = 'amqp://guest:guest@rabbitmq:5672//'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-
+CELERY_BROKER_URL = "amqp://rabbitmq:5672/"
+# CELERY_BROKEN_URL = 'amqp://guest:guest@rabbitmq:5672//'
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_BACKEND = "django-db"

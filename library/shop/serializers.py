@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import CustomUser, Book
 from django.contrib.gis.geos import Point
-
+from notifications.task import create_notification
 
 class RegisterSerializer(serializers.ModelSerializer):
     latitude = serializers.FloatField(required=False)
@@ -26,6 +26,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             user.location = Point(longitude, latitude)
 
         user.save()
+        create_notification.delay(user.id, "You have successfully register.")
         return user
 
 
