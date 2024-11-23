@@ -70,6 +70,14 @@ services:
     depends_on:
       - rabbitmq
 
+  celery_beat:
+    build:
+      context: .
+    command: celery -A library beat --loglevel=info
+    depends_on:
+      - celery_worker
+      - rabbitmq
+
 volumes:
   static_volume:
   media_volume:

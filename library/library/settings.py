@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "shop.apps.ShopConfig",
     "notifications.apps.NotificationsConfig",
     "geoserver.apps.GeoserverConfig",
+    "django_celery_beat",
     "django_celery_results",
 ]
 
@@ -165,7 +166,6 @@ GEOSERVER_USERNAME = "admin"
 GEOSERVER_PASSWORD = "geoserver"
 
 CELERY_BROKER_URL = "amqp://rabbitmq:5672/"
-# CELERY_BROKEN_URL = 'amqp://guest:guest@rabbitmq:5672//'
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_BACKEND = "django-db"

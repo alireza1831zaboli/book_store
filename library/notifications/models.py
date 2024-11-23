@@ -13,3 +13,10 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.message[:30]}"
+
+
+class SystemReport(models.Model):
+    created_at = models.DateTimeField(default=now)
+    users_last_hour = models.IntegerField(default=0)
+    purchases_last_hour = models.IntegerField(default=0)
+    returns_last_hour = models.IntegerField(default=0)
